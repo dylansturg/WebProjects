@@ -6,6 +6,7 @@ from operator import itemgetter
 EnglishLetterFrequencies = [0.08167, 0.01492, 0.02782, 0.04253, 0.12702, 0.02228, 0.02015, 0.06094, 0.06966, 0.00153, 0.00772, 0.04025, 0.02406, 0.06749, 0.07507, 0.01929, 0.0095, 0.05987, 0.06327, 0.09056, 0.02758, 0.00978, 0.02360, 0.00150, 0.01974, 0.0074]
 AlphabetSize = 26
 AsciiOffset = 65
+Letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 
 def main():
 	if len(sys.argv) < 1:
@@ -32,33 +33,62 @@ def main():
 
 	print(vigenereDecrypt(cipherText))
 
-	perc = 0
-	for n in EnglishLetterFrequencies:
-		perc += n
-	print(perc)
 
-def vigenereCrackWithKeyLen(cipherText, keyLen):
+def calculatePotentialKey(cipherText, keyLen):
 	englishCorrelations = []
-	shiftableEnglishFrequencies = deque(EnglishLetterFrequencies)
 
 	for i in range(0, keyLen):
+		shiftableEnglishFrequencies = deque(EnglishLetterFrequencies)
 		textSubset = extractPositions(cipherText, i, keyLen)
 		subsetFrequencies = countLetterFrequencies(textSubset)
+		englishCorrelations.append([])
+		for j in range(0, AlphabetSize):
+			englishCorrelations[i].append((numpy.dot(shiftableEnglishFrequencies, subsetFrequencies), j))
+			shiftableEnglishFrequencies.rotate(1)
 
-		englishCorrelations.append(numpy.dot(shiftableEnglishFrequencies, subsetFrequencies))
-		
+	for i in range(0, len(englishCorrelations)):
+		englishCorrelations[i] = sorted(englishCorrelations[i], key=itemgetter(0), reverse=True)
 
+	keyInts = []
+	for k in englishCorrelations:
+		keyInts.append(k[0][1])
+
+	key = ''
+	for i in keyInts:
+		key += Letters[i]
+
+	return key
 
 def vigenereDecrypt(cipherText):
 	likelyKeyLens = calculateLikelyKeyLens(cipherText)
 	
 	possibleSolutions = []
 
-	for key in likelyKeyLens:
-		possibleSolutions.append(vigenereCrackWithKeyLen(cipherText, key[0]))
+	print('Trying key length: %s' % likelyKeyLens[0][0])
 
-	return likelyKeyLens
+	key = calculatePotentialKey(cipherText, likelyKeyLens[0][0])
 
+	print('Trying key: %s' % key)
+
+	message = vigenereDecryptWithKey(cipherText, key)
+
+	return message
+
+def vigenereDecryptWithKey(cipherText, key):
+	message = []
+	keyIndex = 0
+	for c in cipherText:
+		letterNum = Letters.find(c.upper())
+		letterNum -= Letters.find(key[keyIndex])
+		letterNum %= len(Letters)
+
+		keyIndex += 1
+		if keyIndex >= len(key):
+			keyIndex = 0
+
+		message.append(Letters[letterNum])
+
+	return ''.join(message)
 
 # Count collisions and return an ordered list of most likely lengths for the key
 def calculateLikelyKeyLens(cipherText):
@@ -67,18 +97,15 @@ def calculateLikelyKeyLens(cipherText):
 	shiftCipher.rotate(1)
 
 	for i in range(1, len(cipherText)):
-		coincidenceCounts.append((i, countCoincidences(cipherText, shiftCipher)))
+		coincidenceCounts.append((i, countCoincidences(cipherText, i)))
 		shiftCipher.rotate(1)
 
 	return sortKeys(coincidenceCounts)
 
-def countCoincidences(coll1, coll2):
-	if len(coll1) != len(coll2):
-		raise InputError('Collections must have equal lengths to count coincidences')
-
+def countCoincidences(text, offset):
 	coinCount = 0
-	for i in range(0, len(coll1)):
-		if coll1[i] == coll2[i]:
+	for i in range(0, len(text)-offset):
+		if text[i] == text[i+offset]:
 			coinCount += 1
 
 	return coinCount
