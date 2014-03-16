@@ -63,26 +63,26 @@ def affineDecrypt(cipherText, encryptkey=None):
 
 def extendedEuclidGcd(a, b):
 	''' y = s, x = t '''
-	xCoefs = [0, 1]
-	yCoefs = [1, 0]
+	bCoefs = [0, 1]
+	aCoefs = [1, 0]
 	remainders = [a, b]
 	oldX, x, oldY, y, oldR, r = None, None, None, None, None, None
 	i = 1
 	while(remainders[i] != 0):
 		q = remainders[i-1] // remainders[i]
 		oldR, r = remainders[i], remainders[i-1] - q*remainders[i]
-		oldY, y = yCoefs[i], yCoefs[i-1] - q * yCoefs[i]
-		oldX, x = xCoefs[i], xCoefs[i-1] - q * xCoefs[i]
+		oldY, y = aCoefs[i], aCoefs[i-1] - q * aCoefs[i]
+		oldX, x = bCoefs[i], bCoefs[i-1] - q * bCoefs[i]
 
-		xCoefs.append(x)
-		yCoefs.append(y)
+		bCoefs.append(x)
+		aCoefs.append(y)
 		remainders.append(r)
 		i += 1
 
-	print('Coeff (%s, %s)' % (xCoefs[i-1], yCoefs[i-1]))
+	print('Coeff (%s, %s)' % (aCoefs[i-1], bCoefs[i-1]))
 	print('gcd %s' % remainders[i-1])
 
-	return
+	return aCoefs[i-1], bCoefs[i-1]
 
 
 def euclidQuotients(a, b):
