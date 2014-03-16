@@ -6,6 +6,26 @@ from requests.auth import HTTPBasicAuth
 
 gitapi = "https://api.github.com/"
 
+def scrapeAllCommits(name, user, passw, histogram, types):
+	scraper = GitScraper(user, passw)
+	gitUser = scraper.requestGitUser(name)
+	if gitUser.user() != user:
+		#error on web request
+		print("requesting user failed")
+		return False
+
+	try:
+		gitRepos = scraper.requestGitUserRepos(gitUser)
+		for repo in gitRepos:
+			gitCommits = scraper.requestGitCommits(repo, gitUser)
+			for commit in gitCommits:
+				commit.parseStats(types, histogram)
+			print("repo %s finished" % repo.repoName())
+	except Exception:
+		print("failure during scraping")
+
+	return histogram
+
 
 class GitScraper:
 	auth = None
@@ -14,23 +34,36 @@ class GitScraper:
 		self.auth = HTTPBasicAuth(user, passw)
 
 	def requestGitUser(self, name):
-		resp = requests.get(gitapi+"users/"+name, auth=self.auth).json()
+		resp = requests.get(gitapi+"users/"+name, auth=self.auth)
+		GitScraper.checkRateLimit(resp)
+		resp = resp.json()
 		return GitUser(resp)
 
 	def requestGitUserRepos(self, gituser):
-		resp = requests.get(gitapi+"users/"+gituser.user()+"/repos", auth=self.auth).json()
+		resp = requests.get(gitapi+"users/"+gituser.user()+"/repos", auth=self.auth)
+		GitScraper.checkRateLimit(resp)
+		resp = resp.json()
 		gitrepos = []
 		for r in resp:
 			gitrepos.append(GitRepo(r))
 		return gitrepos
 
 	def requestGitCommits(self, gitrepo, gituser):
-		commits = requests.get(gitapi+"repos/"+gituser.user() + "/" + gitrepo.repoName() + "/commits?" + urllib.parse.urlencode([("author", gituser.user())]), auth=self.auth).json()
+		commits = requests.get(gitapi+"repos/"+gituser.user() + "/" + gitrepo.repoName() + "/commits?" + urllib.parse.urlencode([("author", gituser.user())]), auth=self.auth)
+		GitScraper.checkRateLimit(commits)
+		commits = commits.json()
 		gitcommits = []
 		for c in commits:
-			resp = requests.get(gitapi+"repos/"+gituser.user() + "/" + gitrepo.repoName() + "/commits/" + c["sha"], auth=self.auth).json()
+			resp = requests.get(gitapi+"repos/"+gituser.user() + "/" + gitrepo.repoName() + "/commits/" + c["sha"], auth=self.auth)
+			GitScraper.checkRateLimit(resp)
+			resp = resp.json()
 			gitcommits.append(GitCommit(resp))
 		return gitcommits
+
+	def checkRateLimit(response):
+		if int(response.headers.get('x-ratelimit-remaining', 60)) < 5:
+			print("Nearly out of requests!")
+		return
 
 
 def extractExtension(filename):
