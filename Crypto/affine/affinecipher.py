@@ -61,6 +61,19 @@ def affineDecrypt(cipherText, encryptkey=None):
 		if gcd(encryptkey[0], len(Letters)) > 1:
 			raise ValueError('invalid key: gcd > 1')
 
+		alphaInv, keyInv = extendedEuclidGcd(len(Letters), encryptkey[0])
+
+		shifter = affineShifterGen((keyInv, encryptkey[1]), decrypt=True)
+
+		message = []
+		for c in cipherText:
+			letterNum = Letters.find(c.upper())
+			letterNum = shifter(letterNum) % len(Letters)
+			message.append(Letters[letterNum])
+
+		return ''.join(message).lower()
+
+
 def extendedEuclidGcd(a, b):
 	''' y = s, x = t '''
 	bCoefs = [0, 1]
@@ -79,9 +92,6 @@ def extendedEuclidGcd(a, b):
 		remainders.append(r)
 		i += 1
 
-	print('Coeff (%s, %s)' % (aCoefs[i-1], bCoefs[i-1]))
-	print('gcd %s' % remainders[i-1])
-
 	return aCoefs[i-1], bCoefs[i-1]
 
 
@@ -94,7 +104,6 @@ def euclidQuotients(a, b):
 	quotients = []
 	remainders = []
 	while(a > b):
-		print('eculid %s, %s' % (a, b))
 		q = a // b
 		r = a % b
 		a = b
@@ -107,8 +116,6 @@ def euclidQuotients(a, b):
 	return quotients, remainders
 
 def affineEncrypt(message, key):
-	print('Encrypting with key (%s, %s)' % key)
-
 	if gcd(key[0], len(Letters)) > 1:
 		raise ValueError('invalid key: gcd > 1')
 
@@ -122,8 +129,14 @@ def affineEncrypt(message, key):
 
 	return ''.join(cipherText).upper()
 
+'''
+	key of the form: (multiplier, adder)
+'''
 def affineShifterGen(key, decrypt = False):
-	return lambda x: x*int(key[0]) + int(key[1]) if not decrypt else lambda x: int(key[0]) * (x - int(key[1]))
+	if not decrypt:
+		return lambda x: x*int(key[0]) + int(key[1])
+	else:
+		return lambda x: int(key[0]) * (x - int(key[1]))
 
 def shiftMessageWithKey(text, key, shifter):
 	message = []
