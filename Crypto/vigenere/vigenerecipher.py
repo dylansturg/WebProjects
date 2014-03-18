@@ -75,21 +75,60 @@ def shiftMessageWithKey(text, key, shifter):
 def vigenereDecrypt(cipherText, key=None):
 
 	if not key:
-		likelyKeyLens = VigenereKeyLengthSolver(cipherText)
-		keyLen = next(likelyKeyLens.generateKeyLengths())
-		possibleSolutions = []
-
-		print('Trying key length: %s' % keyLen)
-
-		key = next(VigenereKeySolver(cipherText, likelyKeyLens.generateKeyLengths()).calculatePotentialKey())
-
-		print('Trying key: %s' % key)
+		return crackVigenereWithInput(cipherText)
 
 	print ('using key %s' % key)
 
 	message = shiftMessageWithKey(cipherText, key, lambda x, y: x - y).lower()
 
 	return message
+
+def crackVigenereWithInput(cipherText):
+	keySolver = VigenereKeySolver(cipherText, VigenereKeyLengthSolver(cipherText).generateKeyLengths())
+	keyGenerator = keySolver.calculatePotentialKeys()
+
+	keyGuess = None
+
+	while(True):
+
+		if not keyGuess:
+			try:
+				keyGuess = next(keyGenerator)
+			except StopIteration:
+				keyGenerator = keySolver.calculatePotentialKeys()
+				keyGuess = next(keyGenerator)
+
+		print("Best key guess: %s" % keyGuess)
+		print("Resulting message:")
+		message = shiftMessageWithKey(cipherText, keyGuess, lambda x, y: x - y).lower()
+		print(message)
+
+		keyGuess = parseInput(keyGuess)
+		if keyGuess == -1:
+			return message
+
+
+def parseInput(keyGuess):
+	resp = input("Enter response: ").split(" ")
+
+	if "stop" in resp:
+		return -1
+
+	if "try" in resp:
+		keyGuess = resp[resp.index("try")+1].upper()
+
+	if "replace" in resp:
+		index = int(resp[resp.index("replace")+1])
+		rep = resp[resp.index("replace")+2]
+		keyGuess = list(keyGuess)
+		keyGuess[index] = rep
+		keyGuess = "".join(keyGuess).upper()
+
+	if "go" in resp:
+		keyGuess = None
+
+
+	return keyGuess
 
 if __name__ == "__main__":
 	main()

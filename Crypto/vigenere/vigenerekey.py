@@ -15,12 +15,8 @@ class VigenereKeySolver:
 		self.keyLengths = keylens
 		self.cipherText = cipherText
 
-	def calculatePotentialKey(self):
-
-		keyLen = next(self.keyLengths)
-
+	def calculateAndCompareKeyLetterFrequencies(self, keyLen):
 		englishCorrelations = []
-
 		for i in range(0, keyLen):
 			shiftableEnglishFrequencies = deque(EnglishLetterFrequencies)
 			textSubset = self.cipherText.substringByIncrement(i, keyLen)
@@ -34,15 +30,33 @@ class VigenereKeySolver:
 		for i in range(0, len(englishCorrelations)):
 			englishCorrelations[i] = sorted(englishCorrelations[i], key=itemgetter(0), reverse=True)
 
-		keyInts = []
-		for k in englishCorrelations:
-			keyInts.append(k[0][1])
+		return englishCorrelations
 
-		key = ''
-		for i in keyInts:
-			key += Letters[i]
+	def calculatePotentialKeys(self):
 
-		yield key
+		keyLen = next(self.keyLengths)
+
+		englishCorrelations = self.calculateAndCompareKeyLetterFrequencies(keyLen)
+
+		indices = [0]*keyLen
+
+		while(True):
+			keyInts = []
+			keyComps = []
+
+			for i in range(0, keyLen):
+				keyInts.append(englishCorrelations[i][indices[i]][1])
+				keyComps.append((englishCorrelations[i][indices[i]][0], i))
+
+			keyComps = sorted(keyComps, key=itemgetter(0), reverse=True)
+			indices[keyComps[0][1]] += 1
+
+			
+			key = ''
+			for i in keyInts:
+				key += Letters[i]
+
+			yield key
 
 class VigenereKeyLengthSolver:
 	cipherText = CipherText()
