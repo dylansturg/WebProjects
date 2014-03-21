@@ -1,3 +1,6 @@
+import sys
+from ciphertext import CipherText
+
 def main():
 	if len(sys.argv) < 1:
 		print('Please include some arguments.')
@@ -23,6 +26,9 @@ def main():
 
 		text = sys.argv[sys.argv.index('-t')+1]
 
+	if '-info' in sys.argv:
+		mode = "printstats"
+
 	if '-d' in sys.argv:
 		mode = 'decrypt'
 
@@ -37,6 +43,11 @@ def main():
 
 	if mode == 'encrypt':
 		print(substitutionEncrypt(text, key))
+
+	if mode == "printstats":
+		outfile = open("statsfile.txt", "w")
+		prettyPrintFrequencies(CipherText(text), outfile)
+		outfile.close()
 
 
 def substitutionEncrypt(message, subkey):
@@ -56,6 +67,14 @@ def prettyPrintFrequencies(cipherText, outstream = None):
 
 	digraphs = cipherText.countDigraphs()
 	printFrequencies(digraphs, outstream)
+
+	print("\nReversed Digraphs: ", file=outstream)
+	reversedDigraphs = cipherText.findReversedDigraphs()
+	for f in reversedDigraphs:
+		print(str(f[0]) + " " + str(f[1]) + ", " + str(f[2]) + " " + str(f[3]) + " | ", file=outstream, end="")
+
+	print("", file=outstream, flush=True)
+
 
 	print("\nDouble Letters: ", file=outstream)
 

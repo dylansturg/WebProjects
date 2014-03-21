@@ -14,7 +14,10 @@ class SubstitutionKey(dict):
 			self[k[0]] = k[1]
 
 	def addKey(self, cipherLetter, messageLetter):
-		self[cipherLetter] = messageLetter
+		if cipherLetter not in self:
+			self[cipherLetter] = messageLetter
+		else:
+			print("That letter is already in the key")
 
 	def removeKey(self, cipherLetter):
 		self.pop(cipherLetter, None)

@@ -66,17 +66,36 @@ class CipherText(str):
 					histogram[digraph[0][::-1]] += 1
 				else:
 					pass
-		return histogram
-		histogram = sorted(histogram, key=lambda x: x[1], reverse=True)
-		return histogram
-		duplicates = [x for x in histogram if x[1] > 0]
-		return duplicates
+
+		duplicates = [x for x in histogram if histogram[x] > 0]
+
+		digraphFrequencies = []
+		for dup in duplicates:
+			forwardFreq = find(digraphs, lambda x: x[0]==dup)
+			backwardFreq = find(digraphs, lambda x: x[0] == reverse(dup))
+
+			digraphFrequencies.append((forwardFreq[0], forwardFreq[1], backwardFreq[0], backwardFreq[1]))
+
+		return sorted(digraphFrequencies, key=lambda x: x[1] + x[3], reverse=True)
 
 	def applySubstitutionKey(self, subkey):
 		result = str(self)
 		for k in subkey:
 			result = result.replace(k.upper(), subkey[k].lower())
 		return CipherText(result)
+
+def find(ls, key=None):
+	if not key:
+		raise Exception
+
+	for e in ls:
+		if key(e):
+			return e
+
+	return None
+
+def reverse(s):
+	return s[::-1]
 
 def reverseEqual(s1, s2):
 	return s1 == s2 or s1[::-1] == s2

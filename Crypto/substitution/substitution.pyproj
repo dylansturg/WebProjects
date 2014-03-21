@@ -1,0 +1,28 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+        <SchemaVersion>2.0</SchemaVersion>
+        <ProjectGuid>{e6b51621-517a-4898-b4f6-ed68605aaa83}</ProjectGuid>
+        <ProjectHome />
+        <StartupFile>substitutioncipher.py</StartupFile>
+        <SearchPath />
+        <WorkingDirectory>.</WorkingDirectory>
+        <OutputPath>.</OutputPath>
+        <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
+        <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Configuration)' == 'Debug'" />
+    <PropertyGroup Condition="'$(Configuration)' == 'Release'" />
+    <ItemGroup>
+        <Content Include="bigram_frequencies.txt" />
+        <Content Include="englishfrequencies.txt" />
+        <Content Include="myfile.txt" />
+        <Content Include="trigram_frequencies.txt" />
+        <Compile Include="ciphertext.py" />
+        <Compile Include="substitutioncipher.py" />
+        <Compile Include="substitutionkey.py" />
+    </ItemGroup>
+    <ItemGroup />
+    <Import Project="$(MSBuildToolsPath)\Microsoft.Common.targets" />
+</Project>

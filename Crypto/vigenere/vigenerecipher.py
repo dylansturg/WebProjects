@@ -17,6 +17,7 @@ def main():
 	mode = 'encrypt'
 	text = ''
 	key = None
+	outfile = None
 
 	if '-f' in sys.argv:
 		if len(sys.argv) <= sys.argv.index('-f') + 1:
@@ -26,6 +27,13 @@ def main():
 		textFile = open(sys.argv[sys.argv.index('-f')+1])
 		text = textFile.read()
 		textFile.close()
+
+	if '-fo' in sys.argv:
+		if len(sys.argv) <= sys.argv.index('-fo') + 1:
+			print('Need an accompanying file name')
+			return
+
+		outfile = open(sys.argv[sys.argv.index('-fo')+1], "w")
 
 	if '-t' in sys.argv:
 		if len(sys.argv) <= sys.argv.index('-t') + 1:
@@ -44,10 +52,10 @@ def main():
 		key = sys.argv[sys.argv.index('-k')+1].upper()
 
 	if mode == 'decrypt':
-		print(vigenereDecrypt(CipherText(text), key))
+		print(vigenereDecrypt(CipherText(text), key), file=outfile)
 
 	if mode == 'encrypt':
-		print(vigenereEncrypt(text, key))
+		print(vigenereEncrypt(text, key), file=outfile)
 
 def vigenereEncrypt(message, key):
 	if not key:

@@ -21,6 +21,7 @@ def main():
 	mode = 'encrypt'
 	text = ''
 	key = None
+	outfile = None
 
 	if '-f' in sys.argv:
 		if len(sys.argv) <= sys.argv.index('-f') + 1:
@@ -30,6 +31,13 @@ def main():
 		textFile = open(sys.argv[sys.argv.index('-f')+1])
 		text = textFile.read()
 		textFile.close()
+
+	if '-fo' in sys.argv:
+		if len(sys.argv) <= sys.argv.index('-fo') + 1:
+			print('Need an accompanying file name')
+			return
+
+		outfile = open(sys.argv[sys.argv.index('-fo')+1], "w")
 
 	if '-t' in sys.argv:
 		if len(sys.argv) <= sys.argv.index('-t') + 1:
@@ -49,10 +57,10 @@ def main():
 		key = (int(key[0:2]), int(key[2:]))
 
 	if mode == 'decrypt':
-		print(affineDecrypt(CipherText(text), key))
+		print(affineDecrypt(CipherText(text), key), file=outfile)
 
 	if mode == 'encrypt':
-		print(affineEncrypt(text, key))
+		print(affineEncrypt(text, key), file=outfile)
 
 def gcd(a, b):
 	return numpy.core._internal._gcd(a, b)
@@ -60,9 +68,7 @@ def gcd(a, b):
 def affineDecrypt(cipherText, encryptkey=None):
 	decryptkey = ()
 	if not encryptkey:
-		raise ValueError('finding key is not yet supported')
-
-		return crackAffine(ciphertext, english.AlphabetSize)["message"]
+		return crackAffine(cipherText, english.AlphabetSize)["message"]
 			
 
 	else:
