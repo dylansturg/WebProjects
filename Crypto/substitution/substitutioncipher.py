@@ -47,7 +47,53 @@ def substitutionDecrypt(cipherText, subkey = None):
 	return cipherText
 
 
+def prettyPrintFrequencies(cipherText, outstream = None):
+	print("\nSingles: ", file=outstream)
+	singleLetters = cipherText.countLetterFrequencies()
+	printFrequencies(singleLetters, outstream)
 
+	print("\nDigraphs: ", file=outstream)
+
+	digraphs = cipherText.countDigraphs()
+	printFrequencies(digraphs, outstream)
+
+	print("\nDouble Letters: ", file=outstream)
+
+	doubles = cipherText.countDoubleLetters()
+	printFrequencies(doubles, outstream)
+
+	print("\nTrigraphs: ", file=outstream)
+
+	trigraphs = cipherText.countTrigraphs()
+	printFrequencies(trigraphs, outstream)
+
+def printFrequencies(frequencies, outstream):
+	for f in frequencies:
+		print(str(f[0]) + " " + str(f[1]) + " | ", file=outstream, end="")
+
+	print("", file=outstream, flush=True)
+
+def parseFrequencies(filename):
+	f = open(filename)
+	data = f.read()
+	data = remove(data, ["\n", "|", "-", "%"])
+
+	freqs = data.split(" ")
+	freqs = [i for i in freqs if i != '']
+
+	frequencies = []
+	for i in range(0, len(freqs)//3):
+		frequencies.append((freqs[3*i], freqs[3*i+1], freqs[3*i+2]))
+
+	frequencies = map(lambda x: (x[0], int(x[1]), float(x[2])/100), frequencies)	
+
+	return sorted(frequencies, key=lambda x: x[1], reverse=True)
+
+def remove(string, removals):
+	result = string
+	for r in removals:
+		result = result.replace(r, " ")
+	return result
 
 
 if __name__ == "__main__":
