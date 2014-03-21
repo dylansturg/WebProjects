@@ -4,6 +4,11 @@ from collections import deque
 from ciphertext import CipherText
 from operator import itemgetter
 
+sys.path.append("..")
+sys.path.append("../english")
+from english import english
+from english import languagevalidator
+
 
 AsciiOffset = 65
 Letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
@@ -57,6 +62,9 @@ def affineDecrypt(cipherText, encryptkey=None):
 	if not encryptkey:
 		raise ValueError('finding key is not yet supported')
 
+		return crackAffine(ciphertext, english.AlphabetSize)["message"]
+			
+
 	else:
 		if gcd(encryptkey[0], len(Letters)) > 1:
 			raise ValueError('invalid key: gcd > 1')
@@ -65,14 +73,44 @@ def affineDecrypt(cipherText, encryptkey=None):
 
 		shifter = affineShifterGen((keyInv, encryptkey[1]), decrypt=True)
 
-		message = []
-		for c in cipherText:
-			letterNum = Letters.find(c.upper())
-			letterNum = shifter(letterNum) % len(Letters)
-			message.append(Letters[letterNum])
+		return shiftMessageWithShifter(ciphertext, shifter).lower()
 
-		return ''.join(message).lower()
+def crackAffine(ciphertext, alphabetSize):
+	candidates = findAffineDecryptedCandidates(ciphertext, alphabetSize)
 
+	for i in range(0, len(candidates), 5):
+		for j in range(0, 5):
+			print("Candidate %s: (Decrypt) Key %sx+%s: Correlation: %s" % (i+j, candidates[i+j]['key'][0], candidates[i+j]['key'][1], candidates[i+j]['correlation']))
+			print("Message: %s" % (candidates[i+j]['message']))
+
+		resp = input("Continue? y/n: ")
+		if resp == 'n':
+			cand = input("which one?: ")
+			return candidates[int(cand)]
+
+
+def findAffineDecryptedCandidates(ciphertext, alphabetSize):
+	candidates = []
+
+	for key in generatePotentialKeys(alphabetSize):
+		cand = {}
+		shifter = affineShifterGen(key, decrypt=True)
+		cand['key'] = key
+		cand['message'] = shiftMessageWithShifter(ciphertext, shifter).lower()
+		cand['correlation'] = languagevalidator.LanguageValidator.frequencyCorrelation(cand['message'])
+		candidates.append(cand)
+
+	return sorted(candidates, key=lambda x: x['correlation'], reverse=True)
+
+def generatePotentialKeys(alphabetSize):
+	for multiplier in generateAllRelativelyPrimes(alphabetSize):
+		for adder in range(0, alphabetSize):
+			yield (multiplier, adder)
+
+def generateAllRelativelyPrimes(upperBoundary):
+	for i in range(1, upperBoundary):
+		if gcd(i, upperBoundary) == 1:
+			yield i
 
 def extendedEuclidGcd(a, b):
 	''' y = s, x = t '''
@@ -94,40 +132,13 @@ def extendedEuclidGcd(a, b):
 
 	return aCoefs[i-1], bCoefs[i-1]
 
-
-def euclidQuotients(a, b):
-	if a < b:
-		a ^= b
-		b ^= a
-		a ^= b
-
-	quotients = []
-	remainders = []
-	while(a > b):
-		q = a // b
-		r = a % b
-		a = b
-		b = r
-		quotients.append(q)
-		remainders.append(r)
-		if r == 0:
-			break
-
-	return quotients, remainders
-
 def affineEncrypt(message, key):
 	if gcd(key[0], len(Letters)) > 1:
 		raise ValueError('invalid key: gcd > 1')
 
 	shifter = affineShifterGen(key)
 
-	cipherText = []
-	for c in message:
-		letterNum = Letters.find(c.upper())
-		letterNum = shifter(letterNum) % len(Letters)
-		cipherText.append(Letters[letterNum])
-
-	return ''.join(cipherText).upper()
+	return shiftMessageWithShifter(message, shifter).upper()
 
 '''
 	key of the form: (multiplier, adder)
@@ -138,19 +149,11 @@ def affineShifterGen(key, decrypt = False):
 	else:
 		return lambda x: int(key[0]) * (x - int(key[1]))
 
-def shiftMessageWithKey(text, key, shifter):
+def shiftMessageWithShifter(text, shifter):
 	message = []
-	keyIndex = 0
-	key = key.upper()
 	for c in text:
 		letterNum = Letters.find(c.upper())
-		letterNum = shifter(letterNum, Letters.find(key[keyIndex]))
-		letterNum %= len(Letters)
-
-		keyIndex += 1
-		if keyIndex >= len(key):
-			keyIndex = 0
-
+		letterNum = shifter(letterNum) % len(Letters)
 		message.append(Letters[letterNum])
 
 	return ''.join(message)

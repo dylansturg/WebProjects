@@ -1,5 +1,8 @@
 import numpy
-import english
+try:
+	from english import english
+except:
+	import english
 from cryptotext import CryptoText
 
 class LanguageValidator:
