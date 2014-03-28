@@ -4,6 +4,35 @@ import re
 	String extension to provide extra operations for strings used as cipher text.
 ''' 
 class CipherText(str):
+	def generatePlayfairDigraphs(self):
+		digraphs = []
+		text = CipherText(self.upper())
+
+		currentIndex = 0
+
+		while(True):
+			if len(text) <= currentIndex:
+				break;
+
+			l1 = text[currentIndex]
+			
+			currentIndex += 1
+			if len(text) <= currentIndex:
+				text = CipherText(text+"X")
+
+			l2 = text[currentIndex]
+
+			currentIndex += 1
+
+			if l1 == l2:
+				# duplicate letter, add an X
+				l2 = "X"
+				currentIndex -= 1
+
+			digraphs.append(l1+l2)
+
+		return digraphs
+
 	def countLetterFrequencies(self):
 		frequencies = {}
 
